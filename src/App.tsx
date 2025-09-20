@@ -1,49 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { getWeatherData } from './services/api';
 import WeatherDisplay from './components/WeatherDisplay';
+import Header from './components/Header';
 import { WeatherData } from './types/weather';
 import './App.css';
 
 const App: React.FC = () => {
-  const [city, setCity] = useState<string>('Hanoi'); // State lưu tên thành phố
-  const [weather, setWeather] = useState<WeatherData | null>(null); // State lưu dữ liệu thời tiết
-  const [loading, setLoading] = useState<boolean>(false); // State loading
-  const [error, setError] = useState<string | null>(null); // State lưu lỗi
+  const [city, setCity] = useState<string>('Hanoi');
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Hàm xử lý submit form
+  // Tải dữ liệu mặc định cho Hà Nội khi vào trang dự báo
+  useEffect(() => {
+    const fetchDefaultWeather = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getWeatherData('Hanoi');
+        setWeather(data);
+      } catch (error) {
+        setError('Không tải được dữ liệu mặc định');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDefaultWeather();
+  }, []); // Chỉ chạy 1 lần khi load
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Ngăn reload trang
-    setLoading(true); // Bắt đầu loading
-    setError(null); // Xóa lỗi cũ
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
     try {
-      const data = await getWeatherData(city); // Gọi API với city hiện tại
-      setWeather(data); // Cập nhật dữ liệu
+      const data = await getWeatherData(city);
+      setWeather(data);
     } catch (error) {
-      setError('Không tìm thấy thành phố hoặc lỗi mạng'); // Lưu lỗi
+      setError('Không tìm thấy thành phố hoặc lỗi mạng');
     } finally {
-      setLoading(false); // Kết thúc loading
+      setLoading(false);
     }
   };
 
   return (
-    <div className="App">
-      <h1>Weather App</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={city}
-          onChange={(e) => setCity(e.target.value)} // Cập nhật city khi gõ
-          placeholder="Nhập tên thành phố (ví dụ: Hanoi)"
-        />
-        <button type="submit">Tìm thời tiết</button>
-      </form>
-      {error && <p className="error">{error}</p>} {/* Hiển thị lỗi nếu có */}
-      {loading ? (
-        <p>Đang tải...</p>
-      ) : (
-        <WeatherDisplay current={weather?.current_weather} forecast={weather?.daily} />
-      )}
-    </div>
+    <Router>
+      <div className="App">
+        <Header />
+        <Routes>
+          <Route
+            path="/search"
+            element={
+              <div>
+                <form onSubmit={handleSubmit}>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Nhập tên thành phố (ví dụ: Hanoi)"
+                  />
+                  <button type="submit">Tìm thời tiết</button>
+                </form>
+                {error && <p className="error">{error}</p>}
+                {loading ? (
+                  <p>Đang tải...</p>
+                ) : (
+                  <WeatherDisplay
+                    current={weather?.current_weather}
+                    forecast={weather?.daily}
+                    mode="current"
+                  />
+                )}
+              </div>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              loading ? (
+                <p>Đang tải...</p>
+              ) : (
+                <WeatherDisplay
+                  current={weather?.current_weather}
+                  forecast={weather?.daily}
+                  mode="forecast"
+                />
+              )
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 

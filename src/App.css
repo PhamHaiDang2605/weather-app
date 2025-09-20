@@ -5,15 +5,13 @@
   min-height: 100vh;
   padding: 20px;
 }
-.App h1 {
-  color: #4682b4;
-}
 form {
   margin: 20px 0;
 }
 input {
   padding: 10px;
   font-size: 16px;
+  margin-right: 10px;
 }
 button {
   padding: 10px 20px;
@@ -21,7 +19,9 @@ button {
   border: none;
   cursor: pointer;
 }
-
+button:hover {
+  background-color: #4682b4;
+}
 .error {
   color: red;
   margin: 10px 0;
